@@ -1,0 +1,61 @@
+name: v2 Submit Google Form
+
+on:
+  schedule:
+    # 08:30–23:00 Алматы (UTC+5)
+    - cron: '30 3 * * *'   # 08:30
+    - cron: '15 4 * * *'   # 09:15
+    - cron: '0 5 * * *'    # 10:00
+    - cron: '45 5 * * *'   # 10:45
+    - cron: '30 6 * * *'   # 11:30
+    - cron: '15 7 * * *'   # 12:15
+    - cron: '0 8 * * *'    # 13:00
+    - cron: '45 8 * * *'   # 13:45
+    - cron: '30 9 * * *'   # 14:30
+    - cron: '15 10 * * *'  # 15:15
+    - cron: '0 11 * * *'   # 16:00
+    - cron: '45 11 * * *'  # 16:45
+    - cron: '30 12 * * *'  # 17:30
+    - cron: '15 13 * * *'  # 18:15
+    - cron: '0 14 * * *'   # 19:00
+    - cron: '45 14 * * *'  # 19:45
+    - cron: '30 15 * * *'  # 20:30
+    - cron: '15 16 * * *'  # 21:15
+    - cron: '0 17 * * *'   # 22:00
+    - cron: '0 18 * * *'   # 23:00
+
+  workflow_dispatch:
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run bot
+        run: python v2_google_form_bot.py
+
+      - name: Commit and push state
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add state.json
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update state after submission"
+            git push
+          fi
