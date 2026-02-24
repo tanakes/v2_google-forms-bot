@@ -4,7 +4,7 @@ import time
 import json
 import os
 
-URL = "https://docs.google.com/forms/d/e/1FAIpQLSce7JvrJXbHWyWDoJmInk5A4sY5F_-4sUoQB-2G8-XC_N5Kwg/formResponse"
+URL = "https://docs.google.com/forms/d/e/1FAIpQLSehIJDYbGUUvTEWOiq6WQQ_eV250l7B4-f8VHz8AGdzxucFoQ/formResponse"
 TOTAL_RESPONSES = 104
 STATE_FILE = "state.json"
 
