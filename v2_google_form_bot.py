@@ -4,6 +4,7 @@ import time
 import json
 import os
 
+# Обновлённый URL формы
 URL = "https://docs.google.com/forms/d/e/1FAIpQLSehIJDYbGUUvTEWOiq6WQQ_eV250l7B4-f8VHz8AGdzxucFoQ/formResponse"
 TOTAL_RESPONSES = 104
 STATE_FILE = "state.json"
@@ -140,22 +141,26 @@ def generate_profile(index, english_indices):
     profile['school_lang'] = school_lang
 
     # --- Язык обучения (для учёбы/работы) ---
+    # Новая логика: делаем английский основным для большинства
     if occupation == "Университет / Вуз":
+        # Для университетов английский становится доминирующим
         if native_lang == "Казахский":
-            uni_weights = [0.30, 0.10, 0.40, 0.20]
+            uni_weights = [0.10, 0.10, 0.70, 0.10]  # каз, рус, англ, смеш
         elif native_lang == "Русский":
-            uni_weights = [0.10, 0.35, 0.35, 0.20]
-        else:
-            uni_weights = [0.05, 0.05, 0.70, 0.20]
+            uni_weights = [0.05, 0.15, 0.70, 0.10]
+        else:  # Английский
+            uni_weights = [0.00, 0.00, 0.90, 0.10]
     elif occupation == "Школа":
+        # В школах сохраняем привязку к school_lang, но увеличиваем вероятность английского
         if school_lang == "Казахский":
-            uni_weights = [0.90, 0.02, 0.01, 0.07]
+            uni_weights = [0.70, 0.02, 0.20, 0.08]  # каз, рус, англ, смеш
         elif school_lang == "Русский":
-            uni_weights = [0.02, 0.90, 0.01, 0.07]
-        else:
-            uni_weights = [0.01, 0.01, 0.90, 0.08]
+            uni_weights = [0.02, 0.70, 0.20, 0.08]
+        else:  # Английский
+            uni_weights = [0.00, 0.00, 0.95, 0.05]
     else:  # Работа
-        uni_weights = [0.30, 0.40, 0.10, 0.20]
+        # Для работающих также делаем английский более вероятным
+        uni_weights = [0.30, 0.20, 0.40, 0.10]  # каз, рус, англ, смеш
     profile['uni_lang'] = random.choices(options_map["entry.2049384046"], weights=uni_weights, k=1)[0]
 
     return profile
@@ -317,7 +322,7 @@ def main():
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Referer': 'https://docs.google.com/forms/d/e/1FAIpQLSce7JvrJXbHWyWDoJmInk5A4sY5F_-4sUoQB-2G8-XC_N5Kwg/viewform',
+        'Referer': 'https://docs.google.com/forms/d/e/1FAIpQLSehIJDYbGUUvTEWOiq6WQQ_eV250l7B4-f8VHz8AGdzxucFoQ/viewform',
         'Origin': 'https://docs.google.com',
     }
 
