@@ -3,6 +3,7 @@ import random
 import time
 import json
 import os
+import copy
 
 # Обновлённый URL формы
 URL = "https://docs.google.com/forms/d/e/1FAIpQLSehIJDYbGUUvTEWOiq6WQQ_eV250l7B4-f8VHz8AGdzxucFoQ/formResponse"
@@ -27,7 +28,7 @@ options_map = {
     "entry.1295596769": ["На родном языке (понимание темы происходит быстрее и глубже).", "На языке обучения (даже если он не родной, мне проще усваивать академический материал именно на нем).", "Смешанно: термины легче понимать на английском/языке обучения, а общую суть — на родном языке.", "Разницы нет, я одинаково эффективно воспринимаю информацию на любом из языков."]
 }
 
-# --- Специализированные фразы для последнего вопроса (почему этот язык удобен) ---
+# --- Расширенные специализированные фразы для последнего вопроса ---
 phrases_by_category = {
     'native': [
         "На родном языке я лучше понимаю сложные концепции, потому что не нужно тратить силы на перевод.",
@@ -35,7 +36,11 @@ phrases_by_category = {
         "Мне проще запоминать материал на родном языке, так как он ассоциируется с повседневным общением.",
         "На родном языке меньше когнитивной нагрузки, я могу сосредоточиться на содержании, а не на форме.",
         "Родной язык даёт более глубокое понимание, потому что я чувствую все смысловые оттенки.",
-        "Когда материал сложный, я лучше понимаю его на родном языке, это экономит время."
+        "Когда материал сложный, я лучше понимаю его на родном языке, это экономит время.",
+        "На родном языке меньше когнитивной нагрузки.",
+        "Родной язык помогает быстрее вникать в суть.",
+        "Когда слышу родную речь, лучше запоминаю.",
+        "На родном языке могу задать уточняющие вопросы."
     ],
     'learning': [
         "Я привык к терминам на языке обучения, потому что вся литература и лекции на нём.",
@@ -43,21 +48,33 @@ phrases_by_category = {
         "Это язык моей будущей профессии, поэтому я стараюсь использовать его для всех учебных материалов.",
         "В интернете и учебниках больше информации на этом языке, поэтому так удобнее.",
         "На языке обучения проще обсуждать темы с преподавателями и однокурсниками.",
-        "Оригинальные источники и статьи в основном на этом языке, поэтому приходится его использовать."
+        "Оригинальные источники и статьи в основном на этом языке, поэтому приходится его использовать.",
+        "Все материалы на этом языке, поэтому и думаю на нем.",
+        "Преподаватели требуют использовать термины на языке обучения.",
+        "В профессии принято использовать этот язык.",
+        "Легче готовиться к экзаменам, если все на одном языке."
     ],
     'mixed': [
         "Мне удобно смешивать: общую идею понимать на родном, а термины запоминать на языке обучения.",
         "Я билингв, поэтому для меня естественно переключаться между языками в зависимости от контекста.",
         "Сложные вещи легче осмысливать на родном, но профессиональные термины проще использовать на языке обучения.",
         "Иногда на родном языке лучше понимается общая картина, а детали лучше на языке обучения.",
-        "Так исторически сложилось: я вырос в двуязычной среде, и мозг сам выбирает удобный язык."
+        "Так исторически сложилось: я вырос в двуязычной среде, и мозг сам выбирает удобный язык.",
+        "Мне удобно переключаться между языками, так как я билингв.",
+        "Иногда проще понять на одном языке, а объяснить на другом.",
+        "Смешиваю языки, потому что так говорят в моем окружении.",
+        "Зависит от темы: одно легче на казахском, другое на русском."
     ],
     'none': [
         "Мне без разницы, я одинаково хорошо понимаю на любом языке.",
         "Я вырос в двуязычной среде, поэтому легко переключаюсь и не замечаю разницы.",
         "Для меня содержание важнее языка, главное — чтобы было понятно.",
         "Нет особых предпочтений, материал усваивается одинаково.",
-        "Я одинаково свободно владею несколькими языками, поэтому разницы нет."
+        "Я одинаково свободно владею несколькими языками, поэтому разницы нет.",
+        "Я свободно владею несколькими языками, поэтому без разницы.",
+        "Главное — чтобы информация была понятной, а язык не важен.",
+        "Мне все равно, на каком языке учиться.",
+        "Я одинаково хорошо понимаю на любом языке."
     ],
     'neutral': [
         "Просто так сложилось.",
@@ -65,12 +82,32 @@ phrases_by_category = {
         "Не задумывался об этом.",
         "Так исторически сложилось.",
         "Привычка.",
-        "Легче усваивать информацию."
+        "Легче усваивать информацию.",
+        "Просто так.",
+        "Не знаю.",
+        "Мне так удобно.",
+        "Удобно.",
+        "Привычка.",
+        "Так привык.",
+        "Потому что.",
+        "Без понятия.",
+        "Легче.",
+        "Нравится.",
+        "Эффективно.",
+        "Так проще.",
+        "Не задумывался.",
+        "Сложно объяснить.",
+        "Думаю, это правильно.",
+        "Все так делают.",
+        "Так исторически сложилось.",
+        "Привык с детства.",
+        "Так учили.",
+        "Комфортно.",
+        "Лучше понимаю.",
+        "Меньше ошибок.",
+        "Быстрее."
     ]
 }
-
-# Короткие популярные фразы (иногда встречаются)
-popular_ones = ["Просто так", "Мне так удобнее", "Не знаю", "Удобно", "Привычка"]
 
 # ---------- Функции ----------
 def format_text_randomly(text):
@@ -165,7 +202,18 @@ def generate_profile(index, english_indices):
 
     return profile
 
-def generate_one_response(index, english_indices, categorized):
+def get_phrase_from_category(cat, categorized, original):
+    """
+    Безопасно получает фразу из указанной категории.
+    Если список пуст, восстанавливает его из оригинала и перемешивает.
+    """
+    if not categorized[cat]:
+        # Восстанавливаем из исходного списка
+        categorized[cat] = copy.copy(original[cat])
+        random.shuffle(categorized[cat])
+    return categorized[cat].pop(0)
+
+def generate_one_response(index, english_indices, categorized, original, dots_left):
     # Генерируем согласованный профиль
     profile = generate_profile(index, english_indices)
 
@@ -239,7 +287,8 @@ def generate_one_response(index, english_indices, categorized):
         easier_weights = [0.40, 0.15, 0.35, 0.10]
         data["entry.1295596769"] = random.choices(options_map["entry.1295596769"], weights=easier_weights, k=1)[0]
 
-    # --- 15. Выбор фразы (с учётом ответа на 14) ---
+    # --- 15. Выбор фразы (с учётом ответа на 14 и возможности поставить точку) ---
+    # Определяем целевую категорию
     choice_14 = data["entry.1295596769"]
     if "На родном языке" in choice_14:
         target_cat = 'native'
@@ -252,28 +301,39 @@ def generate_one_response(index, english_indices, categorized):
     else:
         target_cat = 'neutral'
 
-    # Выбираем фразу: в 90% случаев из соответствующей категории, иначе из популярных коротких
-    if random.random() < 0.9:
-        if categorized[target_cat]:
-            ans = categorized[target_cat].pop(0)
-        elif categorized['neutral']:
-            ans = categorized['neutral'].pop(0)
-        else:
-            # Если нужная категория пуста, берём из любой непустой
-            for cat in ['native', 'learning', 'mixed', 'none', 'neutral']:
-                if categorized[cat]:
-                    ans = categorized[cat].pop(0)
-                    break
-            else:
-                ans = random.choice(popular_ones)
+    # Логика вставки точки (примерно 3-4 раза за все анкеты)
+    remaining = TOTAL_RESPONSES - index
+    if dots_left > 0 and remaining > 0:
+        # Вероятность пропорциональна оставшемуся количеству точек
+        prob_dot = dots_left / remaining
+        if random.random() < prob_dot:
+            ans = "."
+            dots_left -= 1
+            data["entry.593581296"] = ans
+            data["pageHistory"] = "0"
+            return data, ans, categorized, dots_left
+
+    # Обычный выбор фразы
+    # Пытаемся взять из целевой категории
+    if categorized[target_cat]:
+        ans = get_phrase_from_category(target_cat, categorized, original)
+    elif categorized['neutral']:
+        ans = get_phrase_from_category('neutral', categorized, original)
     else:
-        ans = random.choice(popular_ones)
+        # Если neutral пуст, берём из любой непустой категории
+        for cat in ['native', 'learning', 'mixed', 'none', 'neutral']:
+            if categorized[cat]:
+                ans = get_phrase_from_category(cat, categorized, original)
+                break
+        else:
+            # Если всё пусто (маловероятно), ставим заглушку
+            ans = "."
 
     ans = format_text_randomly(ans)
     data["entry.593581296"] = ans
     data["pageHistory"] = "0"
 
-    return data, ans, categorized
+    return data, ans, categorized, dots_left
 
 def load_state():
     if os.path.exists(STATE_FILE):
@@ -282,10 +342,12 @@ def load_state():
     else:
         # Создаём копии списков фраз для каждой категории и перемешиваем
         categorized = {}
+        original = {}
         for cat, phrases in phrases_by_category.items():
             cat_phrases = phrases.copy()
             random.shuffle(cat_phrases)
             categorized[cat] = cat_phrases
+            original[cat] = phrases.copy()  # сохраняем оригинал для восстановления
 
         # Индексы, у которых родной язык английский (маленькая доля)
         english_indices = random.sample(range(TOTAL_RESPONSES), 2)
@@ -293,7 +355,9 @@ def load_state():
         return {
             'sent_count': 0,
             'english_indices': english_indices,
-            'categorized': categorized
+            'categorized': categorized,
+            'original': original,
+            'dots_left': 4  # 3-4 точки, возьмём 4
         }
 
 def save_state(state):
@@ -305,6 +369,8 @@ def main():
     sent_count = state['sent_count']
     english_indices = state['english_indices']
     categorized = state['categorized']
+    original = state['original']
+    dots_left = state['dots_left']
 
     if sent_count >= TOTAL_RESPONSES:
         print(f"Все {TOTAL_RESPONSES} анкет уже отправлены. Завершаем.")
@@ -312,7 +378,9 @@ def main():
 
     print(f"Отправка анкеты #{sent_count + 1}...")
 
-    payload, phrase, updated_categorized = generate_one_response(sent_count, english_indices, categorized)
+    payload, phrase, updated_categorized, updated_dots = generate_one_response(
+        sent_count, english_indices, categorized, original, dots_left
+    )
 
     # Небольшая задержка для естественности
     if random.random() < 0.7:
@@ -332,6 +400,7 @@ def main():
             print(f"✅ Анкета #{sent_count + 1} отправлена. Фраза: \"{phrase}\"")
             state['sent_count'] = sent_count + 1
             state['categorized'] = updated_categorized
+            state['dots_left'] = updated_dots
             save_state(state)
         else:
             print(f"❌ Ошибка: статус {response.status_code}")
