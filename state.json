@@ -1,5 +1,5 @@
 {
-  "sent_count": 69,
+  "sent_count": 70,
   "english_indices": [
     38,
     56
@@ -8,9 +8,7 @@
     "native": [],
     "learning": [],
     "mixed": [],
-    "none": [
-      "Я одинаково хорошо понимаю на любом языке."
-    ],
+    "none": [],
     "neutral": []
   },
   "original": {
