@@ -1,5 +1,5 @@
 {
-  "sent_count": 90,
+  "sent_count": 91,
   "categorized": {
     "native": [],
     "learning": [
@@ -49,7 +49,6 @@
       "Мне без разницы."
     ],
     "neutral": [
-      "Так привык.",
       "Так сложилось."
     ]
   },
